@@ -1,0 +1,57 @@
+<Window x:Class="DBLabs.Views.ClassPickerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Assign Class" Height="430" Width="320"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" AllowsTransparency="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PanelBackground}" FontFamily="Segoe UI"
+        Deactivated="Window_Deactivated">
+    <Border BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="TitleText" Text="Assign Calibration Class" Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+            <!-- Single input: type the class name here. It also filters the list below, so an
+                 existing class can be found by typing part of its name. -->
+            <TextBox x:Name="NameBox" Grid.Row="1" Style="{StaticResource InputBox}" Margin="0,0,0,8"
+                     TextChanged="NameBox_TextChanged" KeyDown="NameBox_KeyDown"/>
+
+            <ListBox x:Name="ClassList" Grid.Row="2" Background="Transparent" BorderThickness="0"
+                     ItemContainerStyle="{StaticResource ObjectListItem}"
+                     SelectionChanged="ClassList_SelectionChanged"
+                     MouseDoubleClick="ClassList_MouseDoubleClick" KeyDown="ClassList_KeyDown">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="2,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Width="10" Height="10" Fill="{Binding SwatchBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontSize="12.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="2" Text="{Binding ShapeLabel}" Foreground="{StaticResource TextSecondary}" FontSize="10.5" VerticalAlignment="Center"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel Grid.Row="3" Margin="0,10,0,0">
+                <Border Height="1" Background="{StaticResource BorderSubtle}" Margin="0,0,0,10"/>
+
+                <CheckBox x:Name="AddAsNewClassCheck" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,10">
+                    <TextBlock Text="Do you want to add this as new class?" TextWrapping="Wrap"/>
+                </CheckBox>
+
+                <Button x:Name="AssignButton" Content="Assign" Click="Assign_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,4"/>
+                <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource ToolButton}" HorizontalAlignment="Stretch"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

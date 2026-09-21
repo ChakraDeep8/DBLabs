@@ -1,0 +1,203 @@
+<Window x:Class="DBLabs.Views.CollectRunWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Collect Person Crops" Height="660" Width="880"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="True"
+        Background="{StaticResource AppBackground}" FontFamily="Segoe UI"
+        Closing="Window_Closing">
+    <Grid Margin="14">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="330"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,12">
+            <TextBlock Text="Collect person crops from a live stream" Foreground="{StaticResource TextPrimary}"
+                       FontSize="15" FontWeight="SemiBold"/>
+            <TextBlock Foreground="{StaticResource TextSecondary}" FontSize="11.5" TextWrapping="Wrap" Margin="0,4,0,0"
+                       Text="Samples the stream on a clock, detects people and writes each one as its own image into the dataset folder. Near-identical crops are skipped, so a stationary person doesn't fill the set with the same shot."/>
+        </StackPanel>
+
+        <!-- Settings -->
+        <ScrollViewer Grid.Row="1" Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="SettingsPanel">
+
+                <TextBlock Text="STREAM" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                <ComboBox x:Name="SavedCamerasCombo" Margin="0,0,0,4"
+                          ToolTip="Cameras saved by the RTSP Camera Viewer"
+                          SelectionChanged="SavedCameras_SelectionChanged"/>
+                <TextBox x:Name="UrlBox" Style="{StaticResource InputBox}" Margin="0,0,0,10"
+                         ToolTip="rtsp://user:pass@host:554/stream — pick a saved camera above, or type any URL here"/>
+
+                <TextBlock Text="DATASET FOLDER" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                <TextBox x:Name="OutputBox" Style="{StaticResource InputBox}" Margin="0,0,0,4"/>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="Browse…" Click="Browse_Click" Style="{StaticResource ToolButton}" Margin="0,0,3,0"/>
+                    <TextBox Grid.Column="1" x:Name="LabelBox" Text="Person" Style="{StaticResource InputBox}" Margin="3,0,0,0"
+                             ToolTip="Folder the crops are filed under"/>
+                </Grid>
+
+                <TextBlock Text="SAMPLING" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                <Grid Margin="0,0,0,2">
+                    <TextBlock Text="Frames per second" Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Left"/>
+                    <TextBlock x:Name="FpsValueText" Text="1.0" Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Right"/>
+                </Grid>
+                <Slider x:Name="FpsSlider" Minimum="0.2" Maximum="4" Value="1" TickFrequency="0.2" IsSnapToTickEnabled="True"
+                        ValueChanged="Fps_ValueChanged" Margin="0,0,0,2"/>
+                <TextBlock Text="A ceiling, not a promise — detection takes a few hundred milliseconds, so the run reports what it actually achieved."
+                           Foreground="{StaticResource TextSecondary}" FontSize="10.5" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                <TextBlock Text="STOP WHEN" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                <TextBlock Text="Tick any combination — the run ends at whichever happens first. None ticked runs until you press Stop."
+                           Foreground="{StaticResource TextSecondary}" FontSize="10.5" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="90"/>
+                    </Grid.ColumnDefinitions>
+                    <CheckBox x:Name="UseDuration" Content="After (minutes)" Foreground="{StaticResource TextPrimary}"
+                              FontSize="12" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" x:Name="DurationBox" Text="30" Style="{StaticResource InputBox}"/>
+                </Grid>
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="90"/>
+                    </Grid.ColumnDefinitions>
+                    <CheckBox x:Name="UseCropTarget" Content="After (crops)" Foreground="{StaticResource TextPrimary}"
+                              FontSize="12" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" x:Name="CropTargetBox" Text="500" Style="{StaticResource InputBox}"/>
+                </Grid>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="90"/>
+                    </Grid.ColumnDefinitions>
+                    <CheckBox x:Name="UseStopAt" Content="At clock time (HH:mm)" Foreground="{StaticResource TextPrimary}"
+                              FontSize="12" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" x:Name="StopAtBox" Text="18:00" Style="{StaticResource InputBox}"/>
+                </Grid>
+
+                <TextBlock Text="OUTPUT SIZE" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                <ComboBox x:Name="SizeCombo" Margin="0,0,0,4" SelectionChanged="Size_SelectionChanged"
+                          ToolTip="Every crop is written at this size"/>
+                <ComboBox x:Name="FitCombo" Margin="0,0,0,4"
+                          ToolTip="How a tall person-shaped crop is made to fit that size"/>
+                <TextBlock x:Name="FitHintText" Foreground="{StaticResource TextSecondary}" FontSize="10.5"
+                           TextWrapping="Wrap" Margin="0,0,0,10"
+                           Text="Original keeps each crop at whatever size it came out of the frame."/>
+
+                <TextBlock Text="QUALITY" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                <Grid Margin="0,0,0,2">
+                    <TextBlock Text="Minimum confidence" Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Left"/>
+                    <TextBlock x:Name="ConfidenceValueText" Text="0.50" Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Right"/>
+                </Grid>
+                <Slider x:Name="ConfidenceSlider" Minimum="0.25" Maximum="0.9" Value="0.5" TickFrequency="0.05"
+                        IsSnapToTickEnabled="True" ValueChanged="Confidence_ValueChanged" Margin="0,0,0,8"/>
+
+                <Grid Margin="0,0,0,2">
+                    <TextBlock Text="Variety (skip look-alikes)" Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Left"/>
+                    <TextBlock x:Name="VarietyValueText" Text="6.0" Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Right"/>
+                </Grid>
+                <Slider x:Name="VarietySlider" Minimum="0" Maximum="20" Value="6" TickFrequency="0.5"
+                        IsSnapToTickEnabled="True" ValueChanged="Variety_ValueChanged" Margin="0,0,0,2"/>
+                <TextBlock Text="Higher keeps more similar shots; 0 saves every detection."
+                           Foreground="{StaticResource TextSecondary}" FontSize="10.5" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                <Border Height="20"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Live view -->
+        <Grid Grid.Row="1" Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#101014" CornerRadius="6" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+                <Grid>
+                    <Image x:Name="PreviewImage" Stretch="Uniform" Margin="6"/>
+                    <TextBlock x:Name="PreviewPlaceholder" Text="The stream appears here once collection starts."
+                               Foreground="{StaticResource TextSecondary}" FontSize="12"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- What has actually been collected, as it lands. -->
+            <Border Grid.Row="1" Background="#101014" CornerRadius="6" BorderBrush="{StaticResource BorderSubtle}"
+                    BorderThickness="1" Height="132" Margin="0,10,0,0">
+                <Grid>
+                    <TextBlock x:Name="CropsPlaceholder" Text="Saved crops appear here as they're collected."
+                               Foreground="{StaticResource TextSecondary}" FontSize="11.5"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <ScrollViewer x:Name="CropsScroller" HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Disabled" Padding="6">
+                        <ItemsControl x:Name="SavedCropsList">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#17171C" CornerRadius="4" Margin="0,0,6,0" Padding="3">
+                                        <Image Source="{Binding}" Height="104" Stretch="Uniform"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2" Background="{StaticResource PanelBackground}" CornerRadius="6" Padding="12,10" Margin="0,10,0,0">
+                <StackPanel>
+                    <UniformGrid Columns="4" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock x:Name="SavedText" Text="0" Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="SemiBold"/>
+                            <TextBlock Text="crops saved" Foreground="{StaticResource TextSecondary}" FontSize="10.5"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock x:Name="SampledText" Text="0" Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="SemiBold"/>
+                            <TextBlock Text="frames sampled" Foreground="{StaticResource TextSecondary}" FontSize="10.5"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock x:Name="DuplicatesText" Text="0" Foreground="{StaticResource TextSecondary}" FontSize="20" FontWeight="SemiBold"/>
+                            <TextBlock Text="look-alikes skipped" Foreground="{StaticResource TextSecondary}" FontSize="10.5"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock x:Name="ReconnectsText" Text="0" Foreground="{StaticResource TextSecondary}" FontSize="20" FontWeight="SemiBold"/>
+                            <TextBlock Text="reconnects" Foreground="{StaticResource TextSecondary}" FontSize="10.5"/>
+                        </StackPanel>
+                    </UniformGrid>
+                    <TextBlock x:Name="RunStatusText" Text="Not started." Foreground="{StaticResource TextSecondary}"
+                               FontSize="11.5" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Actions -->
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <TextBlock x:Name="FooterHintText" Foreground="{StaticResource TextSecondary}" FontSize="11"
+                       VerticalAlignment="Center" Margin="0,0,12,0"
+                       Text="The main window stays usable while a run is going."/>
+            <Button x:Name="CloseButton" Content="Close" Click="Close_Click" Style="{StaticResource ToolButton}"/>
+            <Button x:Name="StartButton" Content="Start collecting" Click="Start_Click" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"/>
+            <Button x:Name="StopButton" Content="Stop" Click="Stop_Click" Style="{StaticResource ToolButton}"
+                    Margin="8,0,0,0" Visibility="Collapsed"/>
+        </StackPanel>
+    </Grid>
+</Window>

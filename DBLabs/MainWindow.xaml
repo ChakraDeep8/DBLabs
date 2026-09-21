@@ -1,0 +1,48 @@
+<Window x:Class="DBLabs.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:DBLabs.Views"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="DBLabs — Dataset Builder" Height="820" Width="1320" MinHeight="620" MinWidth="1020"
+        Background="{StaticResource AppBackground}" FontFamily="Segoe UI"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="False"
+        Icon="Assets/logo.png"
+        SourceInitialized="MainWindow_SourceInitialized">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Border Background="{StaticResource AppBackground}" BorderBrush="#000000" BorderThickness="1">
+        <DockPanel LastChildFill="True">
+
+            <!-- Custom title bar, matching the dark chrome the rest of the app uses -->
+            <Grid DockPanel.Dock="Top" Height="40" Background="{StaticResource ChromeBackground}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Margin="14,0,0,0" VerticalAlignment="Center"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="False">
+                    <Image Source="Assets/logo.png" Width="18" Height="18" Margin="0,0,9,0"/>
+                    <TextBlock Text="DBLabs" Foreground="{StaticResource TextPrimary}"
+                               FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="Dataset Builder" Foreground="{StaticResource TextSecondary}"
+                               FontSize="12.5" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="MinimizeButton" Content="&#xE921;" Style="{StaticResource WindowChromeButton}" Click="MinimizeButton_Click"/>
+                    <Button x:Name="RestoreButton" Content="&#xE922;" Style="{StaticResource WindowChromeButton}" Click="MaximizeRestoreButton_Click"/>
+                    <Button x:Name="CloseTitleBarButton" Content="&#xE8BB;" Style="{StaticResource WindowCloseButton}" Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <views:DataBuilderView x:Name="Builder"/>
+        </DockPanel>
+    </Border>
+</Window>

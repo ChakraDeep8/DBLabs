@@ -1,0 +1,263 @@
+﻿<UserControl x:Class="DBLabs.Views.DataBuilderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:DBLabs.Controls"
+             Focusable="False" PreviewKeyDown="DataBuilderView_PreviewKeyDown">
+    <DockPanel LastChildFill="True">
+
+        <!-- Toolbar: get a frame in, then commit the crops. -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource AppBackground}" Padding="12,10">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource ToolbarGroup}">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Open Image" Click="OpenImage_Click" Style="{StaticResource ToolButton}"/>
+                        <Button Content="Open Folder…" ToolTip="Label a whole folder of frames — step through them with N and P"
+                                Click="OpenFolder_Click" Style="{StaticResource ToolButton}"/>
+                        <Button Content="Grab Frame from RTSP…" Click="GrabRtsp_Click" Style="{StaticResource ToolButton}"/>
+                        <Button Content="Grab Frame from Video…" Click="GrabVideo_Click" Style="{StaticResource ToolButton}"/>
+                        <Button Content="Collect from RTSP…" ToolTip="Collect person crops from a live stream unattended, for a set time or until a target count"
+                                Click="CollectFromRtsp_Click" Style="{StaticResource ToolButton}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ToolbarGroup}">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="◀" ToolTip="Previous frame in the folder (P)" Click="PrevImage_Click" Style="{StaticResource ToolButton}"/>
+                        <TextBlock x:Name="FolderPositionText" Text="—" Foreground="{StaticResource TextSecondary}" FontSize="11.5"
+                                   VerticalAlignment="Center" MinWidth="58" TextAlignment="Center"
+                                   ToolTip="Position in the opened folder"/>
+                        <Button Content="▶" ToolTip="Next frame in the folder (N)" Click="NextImage_Click" Style="{StaticResource ToolButton}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ToolbarGroup}">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Add Data" ToolTip="Save the regions on this frame as crops, into a folder named after each label (Ctrl+Enter)"
+                                Click="AddData_Click" Style="{StaticResource PrimaryButton}"/>
+                        <Button Content="Save Database" ToolTip="Close this batch: write labels.csv indexing everything collected, then start fresh (Ctrl+S)"
+                                Click="SaveDatabase_Click" Style="{StaticResource ToolButton}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ToolbarGroup}">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Undo" ToolTip="Ctrl+Z" Click="Undo_Click" Style="{StaticResource ToolButton}"/>
+                        <Button Content="Redo" ToolTip="Ctrl+Y" Click="Redo_Click" Style="{StaticResource ToolButton}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ToolbarGroup}">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Fit" ToolTip="F" Click="Fit_Click" Style="{StaticResource ToolButton}"/>
+                        <Button Content="100%" ToolTip="Ctrl+1 — the plain number keys pick labels here" Click="Zoom100_Click" Style="{StaticResource ToolButton}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom" Background="#17171C" Padding="12,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText" Text="Open an image or grab a frame to begin."
+                           Foreground="{StaticResource TextSecondary}" FontSize="11.5" VerticalAlignment="Center"/>
+                <TextBlock x:Name="SessionTotalText" Grid.Column="1" Text=""
+                           Foreground="{StaticResource TextSecondary}" FontSize="11.5" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftColumn" Width="260" MinWidth="200" MaxWidth="480"/>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="*" MinWidth="240"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: output folder, labels, regions -->
+            <Border Grid.Column="0" Background="{StaticResource PanelBackground}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="10">
+
+                        <TextBlock Text="OUTPUT FOLDER" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                        <TextBox x:Name="OutputFolderBox" Style="{StaticResource InputBox}"
+                                 ToolTip="Crops are written here, one subfolder per class"
+                                 TextChanged="OutputFolder_TextChanged" Margin="0,0,0,4"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Browse…" Click="BrowseOutput_Click"
+                                    Style="{StaticResource ToolButton}" Margin="0,0,3,0"/>
+                            <Button Grid.Column="1" Content="Open Folder" Click="OpenOutputFolder_Click"
+                                    Style="{StaticResource ToolButton}" Margin="3,0,0,0"/>
+                        </Grid>
+
+                        <TextBlock Text="LABEL" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Each region is saved into a folder named after its label. Type a name when you finish drawing, or set one here to reuse for every new region."
+                                   Foreground="{StaticResource TextSecondary}" FontSize="10.5" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                        <Button x:Name="ActiveClassButton" Click="ActiveClassButton_Click" Style="{StaticResource ToolButton}"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,7" Margin="0,0,0,4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Ellipse x:Name="ActiveClassSwatch" Width="10" Height="10" Fill="{StaticResource TextSecondary}"
+                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="ActiveClassText" Grid.Column="1" Text="No label — name each region as you draw"
+                                           TextWrapping="Wrap" FontSize="11.5"/>
+                            </Grid>
+                        </Button>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="+ New Label" Click="NewClass_Click" Style="{StaticResource ToolButton}" Margin="0,0,3,0"/>
+                            <Button Grid.Column="1" Content="Manage" Click="ManageClasses_Click" Style="{StaticResource ToolButton}" Margin="3,0,0,0"/>
+                        </Grid>
+
+                        <!-- The first nine labels, bound to the number keys. Listing them here is
+                             what makes those shortcuts discoverable rather than folklore. -->
+                        <ItemsControl x:Name="LabelShortcutList" Margin="0,0,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#17171C" CornerRadius="4" Padding="6,4" Margin="0,0,0,3"
+                                            Cursor="Hand" MouseLeftButtonDown="LabelShortcut_MouseLeftButtonDown"
+                                            ToolTip="Click, or press its number, to make this the active label">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="{StaticResource TileBackgroundHover}" CornerRadius="3"
+                                                    Width="16" Height="16" Margin="0,0,7,0">
+                                                <TextBlock Text="{Binding Number}" Foreground="{StaticResource TextSecondary}"
+                                                           FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <Ellipse Grid.Column="1" Width="8" Height="8" Fill="{Binding SwatchBrush}"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}"
+                                                       FontSize="11.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock Text="Padding around crop (px)" Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Left"/>
+                            <TextBlock x:Name="PaddingValueText" Text="0" Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Slider x:Name="PaddingSlider" Minimum="0" Maximum="40" Value="0" ValueChanged="Padding_ValueChanged" Margin="0,0,0,10"/>
+
+                        <TextBlock Text="REGIONS" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                        <Border Background="#17171C" CornerRadius="4" BorderBrush="{StaticResource BorderSubtle}"
+                                BorderThickness="1" MaxHeight="260" Margin="0,0,0,10">
+                            <ListBox x:Name="RegionList" Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ItemContainerStyle="{StaticResource ObjectListItem}"
+                                     SelectionChanged="RegionList_SelectionChanged">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Width="8" Height="8" Fill="{Binding SwatchBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" FontSize="12.5"/>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                                <TextBlock Text="✓" Foreground="#5BD68A" FontSize="12" VerticalAlignment="Center"
+                                                           ToolTip="Already saved — Add Data will skip it" Margin="0,0,2,0"
+                                                           Visibility="{Binding IsExported, Converter={StaticResource BoolToVisibility}}"/>
+                                                <TextBlock Text="↶" Foreground="{StaticResource TextSecondary}" FontSize="12" Cursor="Hand"
+                                                           VerticalAlignment="Center" Margin="4,0,0,0"
+                                                           ToolTip="Un-save this crop — deletes the file so you can relabel it and add it again"
+                                                           MouseLeftButtonDown="UnExportRegion_MouseLeftButtonDown"
+                                                           Visibility="{Binding IsExported, Converter={StaticResource BoolToVisibility}}"/>
+                                                <TextBlock Text="✎" Foreground="{StaticResource TextSecondary}" Cursor="Hand" ToolTip="Rename"
+                                                           MouseLeftButtonDown="RenameRegion_MouseLeftButtonDown" Margin="6,0,0,0"/>
+                                                <TextBlock Text="✕" Foreground="{StaticResource TextSecondary}" Cursor="Hand" ToolTip="Delete"
+                                                           MouseLeftButtonDown="DeleteRegion_MouseLeftButtonDown" Margin="8,0,2,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+
+                        <TextBlock Text="SAVED THIS SESSION" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Totals run across the whole session, not just the open batch — Save Database closes a batch without resetting these."
+                                   Foreground="{StaticResource TextSecondary}" FontSize="10.5" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <Border Background="#17171C" CornerRadius="4" BorderBrush="{StaticResource BorderSubtle}"
+                                BorderThickness="1" MaxHeight="200">
+                            <ItemsControl x:Name="SessionCountsList" Margin="8">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <TextBlock Text="{Binding ClassName}" Foreground="{StaticResource TextPrimary}"
+                                                       FontSize="12" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Count}" Foreground="{StaticResource TextSecondary}"
+                                                       FontSize="12" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+
+                        <Border Height="28"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="Transparent"
+                          DragCompleted="Splitter_DragCompleted"/>
+
+            <!-- Canvas -->
+            <Grid Grid.Column="2" x:Name="CanvasHost" ClipToBounds="True">
+                <controls:RoiCanvas x:Name="Canvas"/>
+
+                <!-- Same floating draw toolbar as ROI Calibration. -->
+                <Border x:Name="FloatingTools" HorizontalAlignment="Center" VerticalAlignment="Top"
+                        Margin="0,14,0,0" CornerRadius="8" Padding="5,4" Panel.ZIndex="20"
+                        Background="#E62A2A33" BorderBrush="#4A4A57" BorderThickness="1">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.55" Color="Black"/>
+                    </Border.Effect>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="ToolRectangle" Content="▭" GroupName="DbTools" IsChecked="True"
+                                     ToolTip="Rectangle — click and drag around the subject" Style="{StaticResource FloatingToolButton}" Checked="Tool_Checked"/>
+                        <RadioButton x:Name="ToolSquare" Content="□" GroupName="DbTools"
+                                     ToolTip="Square — width and height stay equal" Style="{StaticResource FloatingToolButton}" Checked="Tool_Checked"/>
+                        <RadioButton x:Name="ToolPolygon" Content="⬠" GroupName="DbTools"
+                                     ToolTip="Polygon — click to add points, Enter or double-click to finish. Saved as its bounding box." Style="{StaticResource FloatingToolButton}" Checked="Tool_Checked"/>
+                        <Border Width="1" Background="#4A4A57" Margin="5,4"/>
+                        <RadioButton x:Name="ToolPan" Content="✋" GroupName="DbTools"
+                                     ToolTip="Pan — drag to move around, or hold Space. Right-click also grabs the palm." Style="{StaticResource FloatingToolButton}" Checked="Tool_Checked"/>
+                        <Border Width="1" Background="#4A4A57" Margin="5,4"/>
+                        <TextBlock Text="?" Foreground="{StaticResource TextSecondary}" FontSize="13" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" Margin="5,0,6,0" Cursor="Help"
+                                   ToolTip="Draw a box around each subject and label it.&#10;Add Data saves every region as its own image,&#10;into a folder named after its label.&#10;&#10;  • Click a region to select it&#10;  • Drag its handles to reshape&#10;  • Ctrl+drag inside it to move&#10;  • Ctrl+D duplicates it&#10;  • Delete removes it&#10;  • Ctrl+Enter runs Add Data"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Empty state -->
+                <Border x:Name="EmptyState" Background="{StaticResource TileBackground}" CornerRadius="8" Margin="30"
+                        AllowDrop="True" Drop="EmptyState_Drop" DragOver="EmptyState_DragOver">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420">
+                        <TextBlock Text="Build a training set" Foreground="{StaticResource TextPrimary}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Open a frame, draw a box around each subject and label it — Staff, Customer, and so on. Add Data saves each box as its own image, sorted into a folder per label."
+                                   Foreground="{StaticResource TextSecondary}" FontSize="12.5" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,18"/>
+                        <Button Content="Open Image" Click="OpenImage_Click" Style="{StaticResource ToolButton}" HorizontalAlignment="Center" Padding="20,9"/>
+                        <TextBlock Text="or drag an image here" Foreground="{StaticResource TextSecondary}" FontSize="11.5" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</UserControl>

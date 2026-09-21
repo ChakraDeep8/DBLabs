@@ -1,0 +1,40 @@
+<Window x:Class="DBLabs.Views.RtspGrabDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Grab Frame from RTSP" Height="330" Width="460"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="{StaticResource AppBackground}" FontFamily="Segoe UI">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Saved cameras (from RTSP Camera Viewer)" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+        <ComboBox x:Name="SavedCamerasCombo" Grid.Row="1" Margin="0,0,0,12" SelectionChanged="SavedCamerasCombo_SelectionChanged"/>
+
+        <TextBlock Grid.Row="2" Text="RTSP URL" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+        <TextBox x:Name="UrlBox" Grid.Row="3" Style="{StaticResource InputBox}" Margin="0,0,0,12"/>
+
+        <CheckBox x:Name="SaveForReuseCheck" Grid.Row="4" Content="Save this camera for reuse" Foreground="{StaticResource TextSecondary}"
+                  Margin="0,0,0,8" Checked="SaveForReuseCheck_CheckedChanged" Unchecked="SaveForReuseCheck_CheckedChanged"/>
+
+        <TextBlock x:Name="SaveNameLabel" Grid.Row="5" Text="Save as name" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4" Visibility="Collapsed"/>
+        <TextBox x:Name="SaveNameBox" Grid.Row="6" Style="{StaticResource InputBox}" Margin="0,0,0,12" Visibility="Collapsed"/>
+
+        <TextBlock x:Name="StatusText" Grid.Row="7" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" Visibility="Collapsed" Margin="0,0,0,8"/>
+
+        <StackPanel Grid.Row="9" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Width="90" Height="32" Margin="0,0,8,0" Click="Cancel_Click" Style="{StaticResource ToolButton}"/>
+            <Button x:Name="GrabButton" Content="Grab Frame" Width="110" Height="32" Click="Grab_Click" Style="{StaticResource ToolButton}"/>
+        </StackPanel>
+    </Grid>
+</Window>

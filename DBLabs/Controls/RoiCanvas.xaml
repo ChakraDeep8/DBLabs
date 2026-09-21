@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="DBLabs.Controls.RoiCanvas"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Focusable="True" Background="{StaticResource TileBackground}">
+    <Border x:Name="Viewport" ClipToBounds="True" Background="Transparent" Focusable="True"
+            MouseLeftButtonDown="Viewport_MouseLeftButtonDown"
+            MouseMove="Viewport_MouseMove"
+            MouseLeftButtonUp="Viewport_MouseLeftButtonUp"
+            MouseRightButtonDown="Viewport_MouseRightButtonDown"
+            MouseWheel="Viewport_MouseWheel"
+            MouseLeave="Viewport_MouseLeave"
+            PreviewKeyDown="Viewport_PreviewKeyDown"
+            SizeChanged="Viewport_SizeChanged">
+        <!-- TransformRoot is sized to the image's FULL pixel dimensions and scaled down by its
+             RenderTransform. It must be hosted in a Canvas, not placed directly in the Border:
+             a Border arranges its child within its own (smaller) content rect, and WPF then
+             applies a LAYOUT CLIP to any child whose explicit size exceeds that rect. That clip
+             is applied in pre-RenderTransform coordinates, so zooming out cannot recover the
+             clipped region — the bottom/right of a large image was being discarded before the
+             scale transform ever ran, at every zoom level. A Canvas measures its children with
+             infinite available size and arranges them at their desired size, so no layout clip
+             is ever applied. The Border's ClipToBounds still clips the final rendered output. -->
+        <Canvas>
+            <!-- IsHitTestVisible=False is important, not cosmetic. RedrawAll rebuilds every
+                 shape, label and handle in ShapesCanvas on each mouse-move while drawing, so
+                 those elements are constantly destroyed and recreated. While they were
+                 hit-testable, a mouse-down could be routed to an element that had just been
+                 detached from the tree; the event then never bubbled to Viewport and the click
+                 was silently lost. That only ever happened where shapes already existed, which
+                 is exactly the "points do not register over a line or ROI" symptom. With the
+                 overlay transparent to hit testing, every click lands on the Viewport border
+                 itself, which is never rebuilt. Nothing is lost: HitTestBody/HitTestHandle do
+                 their own geometric tests in image coordinates and never used WPF hit testing,
+                 and GetPosition(TransformRoot) is a coordinate transform that works regardless. -->
+            <Grid x:Name="TransformRoot" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False">
+                <Grid.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1"/>
+                        <TranslateTransform x:Name="Translate" X="0" Y="0"/>
+                    </TransformGroup>
+                </Grid.RenderTransform>
+                <Image x:Name="BackgroundImage" Stretch="Fill" SnapsToDevicePixels="True"/>
+                <Canvas x:Name="ShapesCanvas" Background="Transparent"/>
+            </Grid>
+        </Canvas>
+    </Border>
+</UserControl>
