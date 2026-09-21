@@ -19,7 +19,17 @@
         </Grid.RowDefinitions>
 
         <TextBlock Text="Saved cameras (from RTSP Camera Viewer)" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
-        <ComboBox x:Name="SavedCamerasCombo" Grid.Row="1" Margin="0,0,0,12" SelectionChanged="SavedCamerasCombo_SelectionChanged"/>
+        <ComboBox x:Name="SavedCamerasCombo" Grid.Row="1" Margin="0,0,0,12" DisplayMemberPath="Name" SelectionChanged="SavedCamerasCombo_SelectionChanged">
+            <ComboBox.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextSecondary}" FontSize="10.5" FontWeight="SemiBold" Margin="4,6,0,2"/>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ComboBox.GroupStyle>
+        </ComboBox>
 
         <TextBlock Grid.Row="2" Text="RTSP URL" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
         <TextBox x:Name="UrlBox" Grid.Row="3" Style="{StaticResource InputBox}" Margin="0,0,0,12"/>

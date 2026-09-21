@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using DBLabs.Models.Roi;
 using DBLabs.Services;
@@ -43,26 +44,35 @@ namespace DBLabs.Views
             OutputBox.Text = DataBuilderSettings.LoadOutputFolder();
         }
 
-        /// <summary>Offers the cameras the RTSP Camera Viewer has saved, so a stream can be picked
-        /// rather than retyped — the URL box stays editable for anything not in that list.</summary>
+        /// <summary>
+        /// Offers the cameras the RTSP Camera Viewer has saved, grouped by store exactly as they
+        /// are grouped there. The grouping earns its keep: camera names repeat between stores, so
+        /// a flat list cannot tell one site's "Everlite" from another's. The URL box stays
+        /// editable for any stream that isn't on the list.
+        /// </summary>
         private void LoadSavedCameras()
         {
-            SavedCamerasCombo.Items.Add(new CameraOption("— pick a saved camera —", ""));
-            foreach (var (name, url) in SavedCamerasStore.LoadRtspViewerCameras())
-                SavedCamerasCombo.Items.Add(new CameraOption(name, url));
+            var cameras = SavedCamerasStore.LoadRtspViewerCameras();
+            if (cameras.Count == 0)
+            {
+                SavedCamerasCombo.IsEnabled = false;
+                SavedCamerasCombo.ToolTip = "No cameras saved by the RTSP Camera Viewer — type a URL below.";
+                return;
+            }
 
-            SavedCamerasCombo.SelectedIndex = 0;
+            var grouped = new CollectionViewSource { Source = cameras };
+            grouped.GroupDescriptions.Add(new PropertyGroupDescription(nameof(SavedCamerasStore.SavedCamera.GroupName)));
+            SavedCamerasCombo.ItemsSource = grouped.View;
+
+            // Left unselected on purpose: the URL box is prefilled with the last stream used, and
+            // auto-selecting the first camera would quietly overwrite it.
+            SavedCamerasCombo.SelectedIndex = -1;
         }
 
         private void SavedCameras_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SavedCamerasCombo.SelectedItem is CameraOption option && !string.IsNullOrEmpty(option.Url))
-                UrlBox.Text = option.Url;
-        }
-
-        private sealed record CameraOption(string Name, string Url)
-        {
-            public override string ToString() => string.IsNullOrEmpty(Url) ? Name : $"{Name}   ({Url})";
+            if (SavedCamerasCombo.SelectedItem is SavedCamerasStore.SavedCamera camera)
+                UrlBox.Text = camera.Url;
         }
 
         // =====================================================================

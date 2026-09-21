@@ -29,9 +29,20 @@
             <StackPanel x:Name="SettingsPanel">
 
                 <TextBlock Text="STREAM" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
-                <ComboBox x:Name="SavedCamerasCombo" Margin="0,0,0,4"
-                          ToolTip="Cameras saved by the RTSP Camera Viewer"
-                          SelectionChanged="SavedCameras_SelectionChanged"/>
+                <ComboBox x:Name="SavedCamerasCombo" Margin="0,0,0,4" DisplayMemberPath="Name"
+                          ToolTip="Cameras saved by the RTSP Camera Viewer, grouped by store"
+                          SelectionChanged="SavedCameras_SelectionChanged">
+                    <ComboBox.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextSecondary}"
+                                               FontSize="10.5" FontWeight="SemiBold" Margin="4,6,0,2"/>
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ComboBox.GroupStyle>
+                </ComboBox>
                 <TextBox x:Name="UrlBox" Style="{StaticResource InputBox}" Margin="0,0,0,10"
                          ToolTip="rtsp://user:pass@host:554/stream — pick a saved camera above, or type any URL here"/>
 
