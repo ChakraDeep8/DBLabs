@@ -92,10 +92,25 @@ namespace DBLabs.Views
             SavedCamerasCombo.SelectedIndex = -1;
         }
 
+        /// <summary>
+        /// Picking a camera also sets the label to the store it belongs to, so crops from a
+        /// Lajpatnagar camera are filed under Lajpatnagar without anyone having to remember to
+        /// type it. The store is already recorded against every camera in the viewer's list, so
+        /// this is reading an answer that exists rather than asking for it twice.
+        ///
+        /// It stays a plain text box afterwards — a run that wants a different label can still
+        /// have one.
+        /// </summary>
         private void SavedCameras_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SavedCamerasCombo.SelectedItem is SavedCamerasStore.SavedCamera camera)
-                UrlBox.Text = camera.Url;
+            if (SavedCamerasCombo.SelectedItem is not SavedCamerasStore.SavedCamera camera) return;
+
+            UrlBox.Text = camera.Url;
+
+            // Only when the camera actually has a store: "Ungrouped" is a display fallback for
+            // the picker, not a name anyone wants their crops filed under.
+            if (!string.IsNullOrWhiteSpace(camera.Store))
+                LabelBox.Text = camera.Store.Trim();
         }
 
         // =====================================================================
