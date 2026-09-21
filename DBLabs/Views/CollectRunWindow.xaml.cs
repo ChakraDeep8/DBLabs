@@ -42,6 +42,29 @@ namespace DBLabs.Views
 
             UrlBox.Text = DataBuilderSettings.LoadCollectUrl();
             OutputBox.Text = DataBuilderSettings.LoadOutputFolder();
+            UpdateDestinationHint();
+        }
+
+        private void Destination_Changed(object sender, TextChangedEventArgs e) => UpdateDestinationHint();
+
+        /// <summary>
+        /// Shows the folder crops will actually land in, and what will be recorded as their class.
+        ///
+        /// Worth the space: the label names both the subfolder and the class column, and getting
+        /// that wrong is only discoverable after a run has finished — at which point the crops are
+        /// filed under the wrong name and the manifest disagrees with the folder around it.
+        /// </summary>
+        private void UpdateDestinationHint()
+        {
+            if (DestinationHintText == null) return;
+
+            var folder = OutputBox.Text.Trim();
+            var label = LabelBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(label)) label = "Person";
+
+            DestinationHintText.Text = string.IsNullOrWhiteSpace(folder)
+                ? $"Crops go into a \"{label}\" subfolder of the dataset folder, and are recorded as class \"{label}\"."
+                : $"Crops → {Path.Combine(folder, label)}    ·    recorded as class \"{label}\"";
         }
 
         /// <summary>

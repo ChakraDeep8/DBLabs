@@ -47,16 +47,20 @@
                          ToolTip="rtsp://user:pass@host:554/stream — pick a saved camera above, or type any URL here"/>
 
                 <TextBlock Text="DATASET FOLDER" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
-                <TextBox x:Name="OutputBox" Style="{StaticResource InputBox}" Margin="0,0,0,4"/>
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="Browse…" Click="Browse_Click" Style="{StaticResource ToolButton}" Margin="0,0,3,0"/>
-                    <TextBox Grid.Column="1" x:Name="LabelBox" Text="Person" Style="{StaticResource InputBox}" Margin="3,0,0,0"
-                             ToolTip="Folder the crops are filed under"/>
-                </Grid>
+                <TextBox x:Name="OutputBox" Style="{StaticResource InputBox}" Margin="0,0,0,4"
+                         TextChanged="Destination_Changed"/>
+                <Button Content="Browse…" Click="Browse_Click" Style="{StaticResource ToolButton}"
+                        HorizontalAlignment="Stretch" Margin="0,0,0,10"/>
+
+                <TextBlock Text="LABEL" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
+                <TextBox x:Name="LabelBox" Text="Person" Style="{StaticResource InputBox}" Margin="0,0,0,4"
+                         TextChanged="Destination_Changed"
+                         ToolTip="Crops are written into a subfolder with this name, and it is recorded as their class"/>
+                <!-- Spelling out where files will actually land: this field names both the
+                     subfolder and the class recorded in labels.csv, which is not obvious from a
+                     bare textbox and is expensive to discover after a long run. -->
+                <TextBlock x:Name="DestinationHintText" Foreground="{StaticResource TextSecondary}"
+                           FontSize="10.5" TextWrapping="Wrap" Margin="0,0,0,10"/>
 
                 <TextBlock Text="SAMPLING" Style="{StaticResource SectionLabel}" Margin="0,0,0,4"/>
                 <Grid Margin="0,0,0,2">
